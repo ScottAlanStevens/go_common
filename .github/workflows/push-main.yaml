@@ -1,0 +1,15 @@
+name: Push Main - Deploy
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - '**'
+
+jobs:
+  Tag:
+    uses: ScottAlanStevens/gha/.github/workflows/tag-repo-workflow.yaml@main
