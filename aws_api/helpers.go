@@ -7,6 +7,48 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
+// func (api *Api) UnmarshalRequest(body string, result any) (bool, error) {
+// 	reqBytes := []byte(body)
+
+// 	if len(reqBytes) == 0 {
+// 		api.logger.Debug().Msg("empty body")
+// 		return false, nil
+// 	} else {
+// 		err := json.Unmarshal(reqBytes, &result)
+// 		if err != nil {
+// 			api.logger.Logger.Debug().Msgf("failed to parse json request: %s", err.Error())
+// 			return false, err
+// 		}
+// 	}
+
+// 	return true, nil
+// }
+
+// func ValidateRequest[T Request](body string) (*T, *events.APIGatewayProxyResponse) {
+
+// 	var req T
+// 	_, err := UnmarshalRequest(body, &req)
+// 	if err != nil {
+// 		return nil, buildErrorResponse(err, 400)
+// 	}
+// 	// if !ok {
+// 	// 	t := new(T)
+// 	// 	req = *t
+// 	// }
+
+// 	v := validator.New()
+
+// 	err = v.Struct(&req)
+// 	if err != nil {
+// 		global.Logger.Debug().Msgf("validation errors: %s", err)
+// 		errors := toConventionalErrors(err.(validator.ValidationErrors), reflect.TypeOf(req))
+// 		errres := buildValidationErrorResponse(ErrorBadRequestMessage, errors, 400)
+// 		return nil, &errres
+// 	}
+
+// 	return &req, nil
+// }
+
 func GetPathParameter(event events.APIGatewayProxyRequest, name string) (bool, string) {
 	value := strings.ToLower(event.PathParameters[name])
 	return value != "", value
@@ -32,14 +74,14 @@ func (api *Api) getCORSAllowOrigin(requestOrigin string) string {
 	return api.options.CORS.AllowedOrigins[0]
 }
 
-func (api *Api) BuildResponse(httpStatusCode int, responseObject interface{}) events.APIGatewayProxyResponse {
+func BuildResponse(httpStatusCode int, responseObject interface{}) events.APIGatewayProxyResponse {
 
 	responseBodyString := ""
 	if responseObject != nil {
 
 		responseBody, err := json.Marshal(responseObject)
 		if err != nil {
-			return *api.BuildErrorResponse(err, 500)
+			return *BuildErrorResponse(err, 500)
 		}
 
 		responseBodyString = string(responseBody)
@@ -48,17 +90,14 @@ func (api *Api) BuildResponse(httpStatusCode int, responseObject interface{}) ev
 	return events.APIGatewayProxyResponse{
 		StatusCode: httpStatusCode,
 		Headers: map[string]string{
-			"Content-Type":                     "application/json",
-			"Access-Control-Allow-Origin":      api.requestOrigin,
-			"Access-Control-Allow-Headers":     strings.Join(api.options.CORS.AllowedHeaders, ","),
-			"Access-Control-Allow-Credentials": "true",
+			"Content-Type": "application/json",
 		},
 		Body: responseBodyString,
 	}
 }
 
-func (api *Api) BuildErrorResponse(err error, httpStatusCode int) *events.APIGatewayProxyResponse {
-	api.logger.Error().Msgf("Error message: %s, Http status code: %d", err.Error(), httpStatusCode)
+func BuildErrorResponse(err error, httpStatusCode int) *events.APIGatewayProxyResponse {
+	// api.logger.Error().Msgf("Error message: %s, Http status code: %d", err.Error(), httpStatusCode)
 
 	responseBytes, _ := json.Marshal(ErrorResponse{
 		Message: err.Error(),
@@ -68,9 +107,13 @@ func (api *Api) BuildErrorResponse(err error, httpStatusCode int) *events.APIGat
 		StatusCode: httpStatusCode,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
-			// "Access-Control-Allow-Origin":  CorsAllowOrigin,
-			// "Access-Control-Allow-Headers": CorsAllowHeaders,
 		},
 		Body: string(responseBytes),
 	}
+}
+
+func (api *Api) AddCORSResponse(res *events.APIGatewayProxyResponse) {
+	res.Headers["Access-Control-Allow-Origin"] = api.requestOrigin
+	res.Headers["Access-Control-Allow-Headers"] = strings.Join(api.options.CORS.AllowedHeaders, ",")
+	res.Headers["Access-Control-Allow-Credentials"] = "true"
 }

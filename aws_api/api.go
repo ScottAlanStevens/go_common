@@ -65,13 +65,17 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 
 	handler, err := api.getHandler(event.HTTPMethod, event.Resource)
 	if err != nil {
-		return *api.BuildErrorResponse(err, 500), nil
+		return *BuildErrorResponse(err, 500), nil
 	}
 
 	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
 	api.requestOrigin = api.getCORSAllowOrigin(requestOrigin)
 
-	return handler.Handle(event), nil
+	response := handler.Handle(event)
+
+	api.AddCORSResponse(&response)
+
+	return response, nil
 }
 
 func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) {
