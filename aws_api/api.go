@@ -21,9 +21,9 @@ type Api struct {
 }
 
 type HandlerRegistration struct {
-	HttpMethod string
-	Resource   string
-	Handler    *Handler
+	HttpMethod         string
+	Resource           string
+	HandlerConstructor *func() Handler
 }
 
 type ApiOptions struct {
