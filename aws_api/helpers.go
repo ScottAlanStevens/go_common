@@ -75,13 +75,12 @@ func (api *Api) getCORSAllowOrigin(requestOrigin string) string {
 }
 
 func BuildResponse(httpStatusCode int, responseObject interface{}) events.APIGatewayProxyResponse {
-
 	responseBodyString := ""
 	if responseObject != nil {
 
 		responseBody, err := json.Marshal(responseObject)
 		if err != nil {
-			return *BuildErrorResponse(err, 500)
+			return *BuildErrorResponse(ErrorResponse{Message: err.Error()}, 500)
 		}
 
 		responseBodyString = string(responseBody)
@@ -96,12 +95,8 @@ func BuildResponse(httpStatusCode int, responseObject interface{}) events.APIGat
 	}
 }
 
-func BuildErrorResponse(err error, httpStatusCode int) *events.APIGatewayProxyResponse {
-	// api.logger.Error().Msgf("Error message: %s, Http status code: %d", err.Error(), httpStatusCode)
-
-	responseBytes, _ := json.Marshal(ErrorResponse{
-		Message: err.Error(),
-	})
+func BuildErrorResponse(errResponse ErrorResponse, httpStatusCode int) *events.APIGatewayProxyResponse {
+	responseBytes, _ := json.Marshal(errResponse)
 
 	return &events.APIGatewayProxyResponse{
 		StatusCode: httpStatusCode,
@@ -115,5 +110,7 @@ func BuildErrorResponse(err error, httpStatusCode int) *events.APIGatewayProxyRe
 func (api *Api) AddCORSResponse(res *events.APIGatewayProxyResponse) {
 	res.Headers["Access-Control-Allow-Origin"] = api.requestOrigin
 	res.Headers["Access-Control-Allow-Headers"] = strings.Join(api.options.CORS.AllowedHeaders, ",")
-	res.Headers["Access-Control-Allow-Credentials"] = "true"
+	if api.options.CORS.AllowCredentials {
+		res.Headers["Access-Control-Allow-Credentials"] = "true"
+	}
 }

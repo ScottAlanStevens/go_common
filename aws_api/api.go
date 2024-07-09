@@ -27,8 +27,9 @@ type HandlerRegistration struct {
 }
 
 type CORSOptions struct {
-	AllowedOrigins []string
-	AllowedHeaders []string
+	AllowedOrigins   []string
+	AllowedHeaders   []string
+	AllowCredentials bool
 }
 
 type ApiOptions struct {
@@ -65,7 +66,8 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 
 	handler, err := api.getHandler(event.HTTPMethod, event.Resource)
 	if err != nil {
-		return *BuildErrorResponse(err, 500), nil
+		api.logger.Error().Msgf("Error message: %s, Http status code: %d", err.Error(), 500)
+		return *BuildErrorResponse(ErrorResponse{Message: err.Error()}, 500), nil
 	}
 
 	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
