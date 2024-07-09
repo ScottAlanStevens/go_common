@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 )
 
 func UnmarshalRequest(body string, result any) (bool, error) {
