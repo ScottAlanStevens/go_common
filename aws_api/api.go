@@ -23,15 +23,17 @@ type Api struct {
 type HandlerRegistration struct {
 	HttpMethod         string
 	Resource           string
-	HandlerConstructor func() Handler
+	HandlerConstructor func(api *Api) Handler
+}
+
+type CORSOptions struct {
+	AllowedOrigins []string
+	AllowedHeaders []string
 }
 
 type ApiOptions struct {
 	Handlers []HandlerRegistration
-	CORS     struct {
-		AllowedOrigins []string
-		AllowedHeaders []string
-	}
+	CORS     CORSOptions
 }
 
 func NewApi(logger zerolog.Logger, options ApiOptions) IApi {
@@ -76,7 +78,7 @@ func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) 
 
 	for _, h := range api.options.Handlers {
 		if h.HttpMethod == httpMethod && h.Resource == resource {
-			return h.HandlerConstructor(), nil
+			return h.HandlerConstructor(api), nil
 		}
 	}
 
