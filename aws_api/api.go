@@ -76,7 +76,7 @@ func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) 
 
 	for _, h := range api.options.Handlers {
 		if h.HttpMethod == httpMethod && h.Resource == resource {
-			return *h.Handler, nil
+			return h.HandlerConstructor(), nil
 		}
 	}
 
