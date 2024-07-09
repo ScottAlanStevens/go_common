@@ -26,7 +26,7 @@ func UnmarshalRequest(body string, result any) (bool, error) {
 
 type Request interface{}
 
-func ValidateRequest[T Request](body string) (*T, *events.APIGatewayProxyResponse) {
+func ValidateRequest[T interface{}](body string) (*T, *events.APIGatewayProxyResponse) {
 
 	var req T
 	_, err := UnmarshalRequest(body, &req)
