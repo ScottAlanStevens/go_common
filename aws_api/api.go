@@ -23,7 +23,7 @@ type Api struct {
 type HandlerRegistration struct {
 	HttpMethod         string
 	Resource           string
-	HandlerConstructor func(api *Api) Handler
+	HandlerConstructor func(ctx context.Context) Handler
 }
 
 type CORSOptions struct {
@@ -84,7 +84,7 @@ func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) 
 
 	for _, h := range api.options.Handlers {
 		if h.HttpMethod == httpMethod && h.Resource == resource {
-			return h.HandlerConstructor(api), nil
+			return h.HandlerConstructor(api.ctx), nil
 		}
 	}
 
