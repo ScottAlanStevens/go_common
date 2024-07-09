@@ -23,7 +23,7 @@ type Api struct {
 type HandlerRegistration struct {
 	HttpMethod         string
 	Resource           string
-	HandlerConstructor *func() Handler
+	HandlerConstructor func() Handler
 }
 
 type ApiOptions struct {
