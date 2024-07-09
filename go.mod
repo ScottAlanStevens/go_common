@@ -1,4 +1,4 @@
-module go_common
+module github.com/scottalanstevens/go_common
 
 go 1.22.4
 
