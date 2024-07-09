@@ -33,8 +33,9 @@ type CORSOptions struct {
 }
 
 type ApiOptions struct {
-	Handlers []HandlerRegistration
-	CORS     CORSOptions
+	Handlers  []HandlerRegistration
+	CORS      CORSOptions
+	LogEvents bool
 }
 
 func NewApi(logger zerolog.Logger, options ApiOptions) IApi {
@@ -58,11 +59,13 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 		Str("path", event.Path).
 		Str("resource", event.Resource).
 		Str("method", event.HTTPMethod).
+		Interface("headers", event.Headers).
 		Msg("Routing request...")
 
 	if event.HTTPMethod == OPTIONS {
 		response := api.HandleOptions(event)
 		api.AddCORSResponse(&response)
+		api.logger.Debug().Interface("response", response).Msg("response")
 		return response, nil
 	}
 
