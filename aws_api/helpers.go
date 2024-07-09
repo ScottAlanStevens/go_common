@@ -2,52 +2,96 @@ package aws_api
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/go-playground/validator"
 )
 
-// func (api *Api) UnmarshalRequest(body string, result any) (bool, error) {
-// 	reqBytes := []byte(body)
+func UnmarshalRequest(body string, result any) (bool, error) {
+	reqBytes := []byte(body)
 
-// 	if len(reqBytes) == 0 {
-// 		api.logger.Debug().Msg("empty body")
-// 		return false, nil
-// 	} else {
-// 		err := json.Unmarshal(reqBytes, &result)
-// 		if err != nil {
-// 			api.logger.Logger.Debug().Msgf("failed to parse json request: %s", err.Error())
-// 			return false, err
-// 		}
-// 	}
+	if len(reqBytes) == 0 {
+		return false, nil
+	} else {
+		err := json.Unmarshal(reqBytes, &result)
+		if err != nil {
+			return false, err
+		}
+	}
 
-// 	return true, nil
-// }
+	return true, nil
+}
 
-// func ValidateRequest[T Request](body string) (*T, *events.APIGatewayProxyResponse) {
+type Request interface{}
 
-// 	var req T
-// 	_, err := UnmarshalRequest(body, &req)
-// 	if err != nil {
-// 		return nil, buildErrorResponse(err, 400)
-// 	}
-// 	// if !ok {
-// 	// 	t := new(T)
-// 	// 	req = *t
-// 	// }
+func ValidateRequest[T Request](body string) (*T, *events.APIGatewayProxyResponse) {
 
-// 	v := validator.New()
+	var req T
+	_, err := UnmarshalRequest(body, &req)
+	if err != nil {
+		return nil, BuildErrorResponse(ErrorResponse{
+			Message: err.Error(),
+		}, 400)
+	}
+	// if !ok {
+	// 	t := new(T)
+	// 	req = *t
+	// }
 
-// 	err = v.Struct(&req)
-// 	if err != nil {
-// 		global.Logger.Debug().Msgf("validation errors: %s", err)
-// 		errors := toConventionalErrors(err.(validator.ValidationErrors), reflect.TypeOf(req))
-// 		errres := buildValidationErrorResponse(ErrorBadRequestMessage, errors, 400)
-// 		return nil, &errres
-// 	}
+	v := validator.New()
 
-// 	return &req, nil
-// }
+	err = v.Struct(&req)
+	if err != nil {
+		// global.Logger.Debug().Msgf("validation errors: %s", err)
+		errors := toConventionalErrors(err.(validator.ValidationErrors), reflect.TypeOf(req))
+		errres := BuildErrorResponse(ErrorResponse{
+			Message:          ErrorBadRequestMessage,
+			ValidationErrors: errors,
+		}, 400)
+		return nil, errres
+	}
+
+	return &req, nil
+}
+
+func toConventionalErrors(errs validator.ValidationErrors, t reflect.Type) []string {
+	errors := []string{}
+
+	for _, err := range errs {
+		// Attempt to find field by name and get json tag name
+		field, _ := t.FieldByName(err.StructField())
+		var name string
+
+		// If json tag doesn't exist, use lower case of name
+		if name = field.Tag.Get("json"); name == "" {
+			name = strings.ToLower(err.StructField())
+		} else {
+			// handles json tags like 'email,omitempty'... we only want the property name.
+			name = strings.Split(name, ",")[0]
+		}
+
+		switch err.Tag() {
+		case "required_if":
+			fallthrough
+		case "required_unless":
+			fallthrough
+		case "required":
+			errors = append(errors, "'"+name+"' property is required.")
+		case "email":
+			errors = append(errors, "'"+name+"' should be a valid email.")
+		case "min":
+			errors = append(errors, "'"+name+"' must be at least "+err.Param()+".")
+		case "max":
+			errors = append(errors, "'"+name+"' must be at most "+err.Param()+".")
+		default:
+			errors = append(errors, "'"+name+"' property is invalid.")
+		}
+	}
+
+	return errors
+}
 
 func GetPathParameter(event events.APIGatewayProxyRequest, name string) (bool, string) {
 	value := strings.ToLower(event.PathParameters[name])

@@ -1,6 +1,10 @@
 package aws_api
 
-import "github.com/aws/aws-lambda-go/events"
+import (
+	"errors"
+
+	"github.com/aws/aws-lambda-go/events"
+)
 
 const (
 	GET     string = "GET"
@@ -8,6 +12,31 @@ const (
 	PATCH   string = "PATCH"
 	DELETE  string = "DELETE"
 	OPTIONS string = "OPTIONS"
+)
+
+var (
+	ErrorUnauthorizedMessage   = "UNAUTHORIZED"
+	ErrorInternalServerMessage = "INTERNAL_SERVER_ERROR"
+	ErrorNotFoundMessage       = "NOT_FOUND"
+	ErrorBadRequestMessage     = "BAD_REQUEST"
+
+	ErrorUnauthorized   = errors.New(ErrorUnauthorizedMessage)
+	ErrorInternalServer = errors.New(ErrorInternalServerMessage)
+	ErrorNotFound       = errors.New(ErrorNotFoundMessage)
+	ErrorBadRequest     = errors.New(ErrorBadRequestMessage)
+
+	ErrorUnauthorizedResponse = ErrorResponse{
+		Message: ErrorUnauthorizedMessage,
+	}
+	ErrorInternalServerResponse = ErrorResponse{
+		Message: ErrorInternalServerMessage,
+	}
+	ErrorNotFoundResponse = ErrorResponse{
+		Message: ErrorNotFoundMessage,
+	}
+	ErrorBadRequestResponse = ErrorResponse{
+		Message: ErrorBadRequestMessage,
+	}
 )
 
 type Handler interface {
