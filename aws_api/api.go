@@ -61,7 +61,9 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 		Msg("Routing request...")
 
 	if event.HTTPMethod == OPTIONS {
-		return api.HandleOptions(event), nil
+		response := api.HandleOptions(event)
+		api.AddCORSResponse(&response)
+		return response, nil
 	}
 
 	handler, err := api.getHandler(event.HTTPMethod, event.Resource)
