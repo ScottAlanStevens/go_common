@@ -13,10 +13,10 @@ type IApi interface {
 }
 
 type Api struct {
-	ctx     context.Context
 	logger  zerolog.Logger
 	options ApiOptions
 
+	ctx           context.Context
 	requestOrigin string
 }
 
@@ -34,14 +34,13 @@ type ApiOptions struct {
 	}
 }
 
-func NewApi(ctx context.Context, logger zerolog.Logger, options ApiOptions) IApi {
+func NewApi(logger zerolog.Logger, options ApiOptions) IApi {
 
 	if len(options.CORS.AllowedOrigins) == 0 {
 		panic("must have at least 1 CORS origin")
 	}
 
 	return &Api{
-		ctx:     ctx,
 		logger:  logger,
 		options: options,
 	}
@@ -49,6 +48,7 @@ func NewApi(ctx context.Context, logger zerolog.Logger, options ApiOptions) IApi
 
 func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
+	api.ctx = ctx
 	// global.SetRequestId(&event.RequestContext.RequestID)
 
 	api.logger.Info().
@@ -69,7 +69,7 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
 	api.requestOrigin = api.getCORSAllowOrigin(requestOrigin)
 
-	return handler.handle(event), nil
+	return handler.Handle(event), nil
 }
 
 func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) {

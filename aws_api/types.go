@@ -11,7 +11,7 @@ const (
 )
 
 type Handler interface {
-	handle(event events.APIGatewayProxyRequest) events.APIGatewayProxyResponse
+	Handle(event events.APIGatewayProxyRequest) events.APIGatewayProxyResponse
 }
 
 type ErrorResponse struct {
