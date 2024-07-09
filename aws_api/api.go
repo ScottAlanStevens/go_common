@@ -62,6 +62,9 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 		Interface("headers", event.Headers).
 		Msg("Routing request...")
 
+	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
+	api.requestOrigin = api.getCORSAllowOrigin(requestOrigin)
+
 	if event.HTTPMethod == OPTIONS {
 		response := api.HandleOptions(event)
 		api.AddCORSResponse(&response)
@@ -74,9 +77,6 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 		api.logger.Error().Msgf("Error message: %s, Http status code: %d", err.Error(), 500)
 		return *BuildErrorResponse(ErrorResponse{Message: err.Error()}, 500), nil
 	}
-
-	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
-	api.requestOrigin = api.getCORSAllowOrigin(requestOrigin)
 
 	response := handler.Handle(event)
 

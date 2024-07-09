@@ -109,7 +109,7 @@ func getRequestOrigin(headers map[string]string, names ...string) string {
 
 func (api *Api) getCORSAllowOrigin(requestOrigin string) string {
 	for _, allowedOrigin := range api.options.CORS.AllowedOrigins {
-		if strings.EqualFold(requestOrigin, allowedOrigin) {
+		if strings.EqualFold(requestOrigin, allowedOrigin) || strings.EqualFold(requestOrigin+"/", allowedOrigin) {
 			return allowedOrigin
 		}
 	}
