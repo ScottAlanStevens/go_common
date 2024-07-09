@@ -1,0 +1,84 @@
+package aws_api
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/rs/zerolog"
+)
+
+type IApi interface {
+	HandleEvent(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
+}
+
+type Api struct {
+	ctx     context.Context
+	logger  zerolog.Logger
+	options ApiOptions
+
+	requestOrigin string
+}
+
+type HandlerRegistration struct {
+	HttpMethod string
+	Resource   string
+	Handler    *Handler
+}
+
+type ApiOptions struct {
+	Handlers []HandlerRegistration
+	CORS     struct {
+		AllowedOrigins []string
+		AllowedHeaders []string
+	}
+}
+
+func NewApi(ctx context.Context, logger zerolog.Logger, options ApiOptions) IApi {
+
+	if len(options.CORS.AllowedOrigins) == 0 {
+		panic("must have at least 1 CORS origin")
+	}
+
+	return &Api{
+		ctx:     ctx,
+		logger:  logger,
+		options: options,
+	}
+}
+
+func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	// global.SetRequestId(&event.RequestContext.RequestID)
+
+	api.logger.Info().
+		Str("path", event.Path).
+		Str("resource", event.Resource).
+		Str("method", event.HTTPMethod).
+		Msg("Routing request...")
+
+	if event.HTTPMethod == OPTIONS {
+		return api.HandleOptions(event), nil
+	}
+
+	handler, err := api.getHandler(event.HTTPMethod, event.Resource)
+	if err != nil {
+		return *api.BuildErrorResponse(err, 500), nil
+	}
+
+	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
+	api.requestOrigin = api.getCORSAllowOrigin(requestOrigin)
+
+	return handler.handle(event), nil
+}
+
+func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) {
+
+	for _, h := range api.options.Handlers {
+		if h.HttpMethod == httpMethod && h.Resource == resource {
+			return *h.Handler, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no handler registered for %s %s", httpMethod, resource)
+}
