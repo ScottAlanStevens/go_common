@@ -55,11 +55,16 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 	api.ctx = ctx
 	// global.SetRequestId(&event.RequestContext.RequestID)
 
+	if api.options.LogEvents {
+		api.logger.Info().
+			Interface("event", event).
+			Msg("request")
+	}
+
 	api.logger.Info().
 		Str("path", event.Path).
 		Str("resource", event.Resource).
 		Str("method", event.HTTPMethod).
-		Interface("headers", event.Headers).
 		Msg("Routing request...")
 
 	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
@@ -68,7 +73,9 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 	if event.HTTPMethod == OPTIONS {
 		response := api.HandleOptions(event)
 		api.AddCORSResponse(&response)
-		api.logger.Debug().Interface("response", response).Msg("response")
+		if api.options.LogEvents {
+			api.logger.Debug().Interface("response", response).Msg("response")
+		}
 		return response, nil
 	}
 
