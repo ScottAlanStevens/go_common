@@ -21,3 +21,12 @@ func (mock *MockEntityRepository) GetEntity(id string, entityType EntityType) (*
 	}
 	return a.(*Entity), args.Error(1)
 }
+
+func (mock *MockEntityRepository) UpsertObject(id string, data any, entityType EntityType) error {
+	args := mock.Called(id, data, entityType)
+	return args.Error(0)
+}
+func (mock *MockEntityRepository) GetObject(id string, entityType EntityType, result any) error {
+	args := mock.Called(id, entityType, result)
+	return args.Error(0)
+}
