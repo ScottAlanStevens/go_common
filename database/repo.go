@@ -97,3 +97,27 @@ func (c *EntityRepository) GetEntity(id string, entityType EntityType) (*Entity,
 
 	return &entity, nil
 }
+
+func (c *EntityRepository) UpsertObject(id string, data any, entityType EntityType) error {
+	entity, err := MarshalObject(data, id, entityType)
+	if err != nil {
+		return err
+	}
+
+	return c.UpsertEntity(*entity)
+}
+
+func (c *EntityRepository) GetObject(id string, entityType EntityType, result any) error {
+
+	entity, err := c.GetEntity(id, entityType)
+	if err != nil {
+		return err
+	}
+
+	if entity == nil {
+		return nil
+	}
+
+	err = UnmarshalObject(*entity, &result)
+	return err
+}
