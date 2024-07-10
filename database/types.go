@@ -19,6 +19,9 @@ type EntityRepository struct {
 type IEntityRepository interface {
 	UpsertEntity(entity Entity) error
 	GetEntity(id string, entityType EntityType) (*Entity, error)
+
+	UpsertObject(id string, data any, entityType EntityType) error
+	GetObject(id string, entityType EntityType, result any) error
 }
 
 type Entity struct {
