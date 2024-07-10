@@ -1,9 +1,11 @@
 package aws_api
 
 import (
+	"context"
 	"errors"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -41,6 +43,38 @@ var (
 
 type Handler interface {
 	Handle(event events.APIGatewayProxyRequest) events.APIGatewayProxyResponse
+}
+
+type HandlerConstructor func(ctx context.Context) Handler
+
+type IApi interface {
+	HandleEvent(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
+}
+
+type Api struct {
+	logger  zerolog.Logger
+	options ApiOptions
+
+	ctx           context.Context
+	requestOrigin string
+}
+
+type HandlerRegistration struct {
+	HttpMethod         string
+	Resource           string
+	HandlerConstructor HandlerConstructor
+}
+
+type CORSOptions struct {
+	AllowedOrigins   []string
+	AllowedHeaders   []string
+	AllowCredentials bool
+}
+
+type ApiOptions struct {
+	Handlers  []HandlerRegistration
+	CORS      CORSOptions
+	LogEvents bool
 }
 
 type ErrorResponse struct {

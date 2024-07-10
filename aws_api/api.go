@@ -8,36 +8,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type IApi interface {
-	HandleEvent(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
-}
-
-type Api struct {
-	logger  zerolog.Logger
-	options ApiOptions
-
-	ctx           context.Context
-	requestOrigin string
-}
-
-type HandlerRegistration struct {
-	HttpMethod         string
-	Resource           string
-	HandlerConstructor func(ctx context.Context) Handler
-}
-
-type CORSOptions struct {
-	AllowedOrigins   []string
-	AllowedHeaders   []string
-	AllowCredentials bool
-}
-
-type ApiOptions struct {
-	Handlers  []HandlerRegistration
-	CORS      CORSOptions
-	LogEvents bool
-}
-
 func NewApi(logger zerolog.Logger, options ApiOptions) IApi {
 
 	if len(options.CORS.AllowedOrigins) == 0 {
