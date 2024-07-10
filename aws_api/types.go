@@ -8,12 +8,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type HttpMethod string
+
 const (
-	GET     string = "GET"
-	POST    string = "POST"
-	PATCH   string = "PATCH"
-	DELETE  string = "DELETE"
-	OPTIONS string = "OPTIONS"
+	GET     HttpMethod = "GET"
+	POST    HttpMethod = "POST"
+	PATCH   HttpMethod = "PATCH"
+	DELETE  HttpMethod = "DELETE"
+	OPTIONS HttpMethod = "OPTIONS"
 )
 
 var (
@@ -60,7 +62,7 @@ type Api struct {
 }
 
 type HandlerRegistration struct {
-	HttpMethod         string
+	HttpMethod         HttpMethod
 	Resource           string
 	HandlerConstructor HandlerConstructor
 }

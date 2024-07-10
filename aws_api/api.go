@@ -40,7 +40,7 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 	requestOrigin := getRequestOrigin(event.Headers, "origin", "Origin", "Referer", "referer")
 	api.requestOrigin = api.getCORSAllowOrigin(requestOrigin)
 
-	if event.HTTPMethod == OPTIONS {
+	if event.HTTPMethod == string(OPTIONS) {
 		response := api.HandleOptions(event)
 		api.AddCORSResponse(&response)
 		if api.options.LogEvents {
@@ -65,7 +65,7 @@ func (api *Api) HandleEvent(ctx context.Context, event events.APIGatewayProxyReq
 func (api *Api) getHandler(httpMethod string, resource string) (Handler, error) {
 
 	for _, h := range api.options.Handlers {
-		if h.HttpMethod == httpMethod && h.Resource == resource {
+		if string(h.HttpMethod) == httpMethod && h.Resource == resource {
 			return h.HandlerConstructor(api.ctx), nil
 		}
 	}

@@ -158,3 +158,11 @@ func (api *Api) AddCORSResponse(res *events.APIGatewayProxyResponse) {
 		res.Headers["Access-Control-Allow-Credentials"] = "true"
 	}
 }
+
+func Register(httpMethod HttpMethod, resource string, constructor HandlerConstructor) HandlerRegistration {
+	return HandlerRegistration{
+		HttpMethod:         httpMethod,
+		Resource:           resource,
+		HandlerConstructor: constructor,
+	}
+}
