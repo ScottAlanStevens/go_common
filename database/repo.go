@@ -69,8 +69,8 @@ func (c *EntityRepository) UpsertEntity(entity Entity) error {
 func (c *EntityRepository) GetEntity(id string, entityType EntityType) (*Entity, error) {
 
 	key := map[string]types.AttributeValue{
-		ENTITY_ID: &types.AttributeValueMemberS{Value: id},
-		// ENTITY_TYPE: &types.AttributeValueMemberS{Value: entityType},
+		ENTITY_ID:   &types.AttributeValueMemberS{Value: id},
+		ENTITY_TYPE: &types.AttributeValueMemberS{Value: entityType},
 	}
 
 	tableName := c.entityTableMap[entityType]
