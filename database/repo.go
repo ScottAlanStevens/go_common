@@ -39,6 +39,7 @@ func (c *EntityRepository) UpsertEntity(entity Entity) error {
 
 	attributesMap, err := attributevalue.MarshalMap(entity)
 	if err != nil {
+		c.logger.Error().Err(err).Msg("failed to marshal record")
 		return fmt.Errorf("failed to marshal record, %w", err)
 	}
 
@@ -48,6 +49,7 @@ func (c *EntityRepository) UpsertEntity(entity Entity) error {
 	})
 
 	if err != nil {
+		c.logger.Error().Err(err).Msg("failed to put item")
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
 			switch apiErr.ErrorCode() {
@@ -80,6 +82,7 @@ func (c *EntityRepository) GetEntity(id string, entityType EntityType) (*Entity,
 	})
 
 	if err != nil {
+		c.logger.Error().Err(err).Msg("failed to retrieve record")
 		return nil, fmt.Errorf("failed to retrieve record, %w", err)
 	}
 
@@ -92,6 +95,7 @@ func (c *EntityRepository) GetEntity(id string, entityType EntityType) (*Entity,
 	err = attributevalue.UnmarshalMap(result.Item, &entity)
 
 	if err != nil {
+		c.logger.Error().Err(err).Msg("failed to unmarshal record")
 		return nil, fmt.Errorf("failed to unmarshal record, %w", err)
 	}
 
